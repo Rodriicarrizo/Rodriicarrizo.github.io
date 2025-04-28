@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trivia de Psicología</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(to bottom right, #74ebd5, #ACB6E5);
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+    h1 {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+    .start-btn, .options button, .restart-btn, .next-btn {
+      width: 100%;
+      margin: 10px 0;
+      padding: 15px;
+      font-size: 18px;
+      border-radius: 8px;
+      border: none;
+      background-color: #74ebd5;
+      color: black;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .start-btn:hover, .options button:hover, .restart-btn:hover, .next-btn:hover {
+      background-color: #5ccccc;
+    }
+    .question {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .options button {
+      background-color: #f0f0f0;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 24px;
+      }
+      .question {
+        font-size: 20px;
+      }
+      .options button, .start-btn, .restart-btn, .next-btn {
+        font-size: 16px;
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container" id="welcome-screen">
+  <h1>Bienvenido a la Trivia de Psicología 🧠</h1>
+  <button class="start-btn" onclick="startTrivia()">Comenzar a jugar</button>
+</div>
+
+<div class="container" id="trivia-screen" style="display:none;">
+  <div class="question" id="question">Pregunta cargando...</div>
+  <div class="timer" id="timer">20</div>
+  <div class="options" id="options"></div>
+  <div class="result" id="result"></div>
+  <div id="next-container" style="margin-top: 20px;"></div>
+</div>
+
+<script>
+const questions = [
+  {
+    question: "¿Qué concepto introduce el psicoanálisis que cambia radicalmente la mirada sobre la infancia?",
+    options: ["La inteligencia emocional infantil", "La sexualidad infantil", "El aprendizaje por imitación"],
+    answer: "La sexualidad infantil"
+  },
+  {
+    question: "¿Qué propuso Jean Piaget sobre los errores de los niños?",
+    options: ["Que son fracasos en el aprendizaje", "Que son teorías en construcción sobre el mundo", "Que son manifestaciones de falta de madurez"],
+    answer: "Que son teorías en construcción sobre el mundo"
+  },
+  {
+    question: "¿Qué hecho importante ocurrió el 20 de noviembre de 1959?",
+    options: ["Se fundó la UNICEF", "Se sancionó la Declaración Universal de los Derechos del Niño", "Se creó el primer ministerio de Infancia"],
+    answer: "Se sancionó la Declaración Universal de los Derechos del Niño"
+  },
+  {
+    question: "¿Qué provocaron las políticas neoliberales en la infancia en Argentina?",
+    options: ["Aumento de la escolarización infantil", "Mejoras en la alimentación infantil", "Empobrecimiento y aumento del trabajo infantil"],
+    answer: "Empobrecimiento y aumento del trabajo infantil"
+  },
+  {
+    question: "¿Cómo impactaron las nuevas tecnologías en la infancia, según el texto?",
+    options: ["Contribuyeron a democratizar el acceso a la educación", "Generaron brechas de acceso y fragmentaron la infancia", "No influyeron en los procesos de socialización"],
+    answer: "Generaron brechas de acceso y fragmentaron la infancia"
+  },
+  {
+    question: "¿Qué representa la presencia de niños cartoneros en las calles?",
+    options: ["Un modelo exitoso de inserción laboral temprana", "El resultado de la exclusión social y económica", "Una estrategia de inclusión educativa"],
+    answer: "El resultado de la exclusión social y económica"
+  }
+];
+
+let currentQuestion = 0;
+let score = 0;
+let timer;
+let timeLeft = 20;
+
+function startTrivia() {
+  document.getElementById('welcome-screen').style.display = 'none';
+  document.getElementById('trivia-screen').style.display = 'block';
+  currentQuestion = 0;
+  score = 0;
+  document.getElementById('result').textContent = '';
+  document.getElementById('next-container').innerHTML = '';
+  document.getElementById('timer').style.display = 'block'; // Mostrar el temporizador
+  showQuestion();
+}
+
+function showQuestion() {
+  const q = questions[currentQuestion];
+  document.getElementById('question').textContent = q.question;
+  
+  const optionsDiv = document.getElementById('options');
+  optionsDiv.innerHTML = '';
+
+  q.options.forEach(option => {
+    const button = document.createElement('button');
+    button.textContent = option;
+    button.onclick = () => checkAnswer(option);
+    optionsDiv.appendChild(button);
+  });
+
+  // Timer reset
+  timeLeft = 20;
+  document.getElementById('timer').textContent = timeLeft;
+  timer = setInterval(updateTimer, 1000);
+}
+
+function updateTimer() {
+  timeLeft--;
+  document.getElementById('timer').textContent = timeLeft;
+
+  if (timeLeft <= 0) {
+    clearInterval(timer);
+    checkAnswer(null); // Automatically mark as incorrect
+  }
+}
+
+function checkAnswer(selected) {
+  clearInterval(timer);
+
+  const correct = questions[currentQuestion].answer;
+  const resultDiv = document.getElementById('result');
+
+  if (selected === correct) {
+    score++;
+    resultDiv.textContent = "¡Correcto!";
+    resultDiv.style.color = "green";
+  } else if (selected === null) {
+    resultDiv.textContent = `¡Tiempo agotado! La respuesta era: ${correct}`;
+    resultDiv.style.color = "red";
+  } else {
+    resultDiv.textContent = `Incorrecto. La respuesta era: ${correct}`;
+    resultDiv.style.color = "red";
+  }
+
+  currentQuestion++;
+
+  if (currentQuestion < questions.length) {
+    const nextButton = document.createElement('button');
+    nextButton.textContent = "Siguiente pregunta";
+    nextButton.classList.add('next-btn');
+    nextButton.onclick = () => {
+      resultDiv.textContent = '';
+      showQuestion();
+      document.getElementById('next-container').innerHTML = ''; // Clear the "next" button
+    };
+    document.getElementById('next-container').appendChild(nextButton);
+  } else {
+    setTimeout(() => {
+      finishTrivia();
+    }, 1500);
+  }
+}
+
+function finishTrivia() {
+  document.getElementById('question').textContent = `¡Trivia finalizada! 🎉 Puntaje: ${score}/${questions.length}`;
+  document.getElementById('options').innerHTML = '';
+  document.getElementById('result').textContent = '';
+  document.getElementById('timer').style.display = 'none'; // Ocultar el temporizador
+  
+  const restartDiv = document.getElementById('next-container');
+  restartDiv.innerHTML = '<button class="restart-btn" onclick="startTrivia()">Volver a jugar</button>';
+}
+</script>
+
+</body>
+</html>
