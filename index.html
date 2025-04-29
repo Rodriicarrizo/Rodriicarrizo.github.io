@@ -20,7 +20,7 @@
       padding: 30px;
       border-radius: 15px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      max-width: 500px;
+      max-width: 600px;
       width: 100%;
       text-align: center;
     }
@@ -28,7 +28,7 @@
       font-size: 28px;
       margin-bottom: 20px;
     }
-    .start-btn, .options button, .restart-btn, .next-btn {
+    .start-btn, .options button, .next-btn {
       width: 100%;
       margin: 10px 0;
       padding: 15px;
@@ -40,7 +40,7 @@
       cursor: pointer;
       transition: background 0.3s;
     }
-    .start-btn:hover, .options button:hover, .restart-btn:hover, .next-btn:hover {
+    .start-btn:hover, .options button:hover, .next-btn:hover {
       background-color: #5ccccc;
     }
     .question {
@@ -55,6 +55,20 @@
       font-size: 20px;
       font-weight: bold;
     }
+    .summary {
+      text-align: left;
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    .summary p {
+      margin: 8px 0;
+    }
+    .thanks {
+      margin-top: 30px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #333;
+    }
     @media (max-width: 600px) {
       h1 {
         font-size: 24px;
@@ -62,7 +76,7 @@
       .question {
         font-size: 20px;
       }
-      .options button, .start-btn, .restart-btn, .next-btn {
+      .options button, .start-btn, .next-btn {
         font-size: 16px;
         padding: 12px;
       }
@@ -85,6 +99,15 @@
 </div>
 
 <script>
+// Función para mezclar las opciones
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 const questions = [
   {
     question: "¿Qué concepto introduce el psicoanálisis que cambia radicalmente la mirada sobre la infancia?",
@@ -115,40 +138,76 @@ const questions = [
     question: "¿Qué representa la presencia de niños cartoneros en las calles?",
     options: ["Un modelo exitoso de inserción laboral temprana", "El resultado de la exclusión social y económica", "Una estrategia de inclusión educativa"],
     answer: "El resultado de la exclusión social y económica"
-  }
+  },
+  {
+    question: "¿Qué pasó en el Siglo del Niño?",
+    options: [
+      "La Declaración de los Derechos del Niño fue aprobada en 1989.",
+      "El Siglo del Niño se refiere al siglo XIX, cuando se priorizó la educación infantil.",
+      "UNICEF fue creado después de la Segunda Guerra Mundial para ayudar a los niños afectados."
+    ],
+    answer: "El Siglo del Niño se refiere al siglo XIX, cuando se priorizó la educación infantil."
+  },
+  {
+    question: "¿Qué rol cumplía la brecha digital?",
+    options: [
+      "La brecha digital solo afecta a los adultos y no a los niños.",
+      "Tener acceso a internet mejora las oportunidades educativas de los niños.",
+      "La brecha digital puede aumentar las desigualdades sociales."
+    ],
+    answer: "Tener acceso a internet mejora las oportunidades educativas de los niños."
+  },
+  {
+    question: "¿Qué pasó en mayo de 2002 y octubre de 2001?",
+    options: [
+      "La reunión de líderes sobre infancia se hizo de una sin problemas en octubre de 2001.",
+      "En mayo de 2002 se firmó un acuerdo llamado “Un mundo apropiado para los niños”",
+      "Todo el evento de la infancia lo armó la OMS"
+    ],
+    answer: "En mayo de 2002 se firmó un acuerdo llamado “Un mundo apropiado para los niños”"
+  },
+  {
+    question: "¿Qué nombre le da la Psicología Social a las construcciones sociales como la infancia?",
+    options: ["Conocimientos naturales", "Representaciones sociales", "Interpretaciones científicas"],
+    answer: "Representaciones sociales"
+}
+
 ];
 
 let currentQuestion = 0;
 let score = 0;
 let timer;
 let timeLeft = 20;
+let answersSummary = [];
 
 function startTrivia() {
   document.getElementById('welcome-screen').style.display = 'none';
   document.getElementById('trivia-screen').style.display = 'block';
   currentQuestion = 0;
   score = 0;
+  answersSummary = [];
   document.getElementById('result').textContent = '';
   document.getElementById('next-container').innerHTML = '';
-  document.getElementById('timer').style.display = 'block'; // Mostrar el temporizador
+  document.getElementById('timer').style.display = 'block'; 
   showQuestion();
 }
 
 function showQuestion() {
   const q = questions[currentQuestion];
-  document.getElementById('question').textContent = q.question;
+  document.getElementById('question').textContent = `Pregunta ${currentQuestion + 1} de ${questions.length}: ${q.question}`;
   
   const optionsDiv = document.getElementById('options');
   optionsDiv.innerHTML = '';
 
-  q.options.forEach(option => {
+  const shuffledOptions = shuffleArray([...q.options]);
+
+  shuffledOptions.forEach(option => {
     const button = document.createElement('button');
     button.textContent = option;
-    button.onclick = () => checkAnswer(option);
+    button.onclick = () => checkAnswer(option, button);
     optionsDiv.appendChild(button);
   });
 
-  // Timer reset
   timeLeft = 20;
   document.getElementById('timer').textContent = timeLeft;
   timer = setInterval(updateTimer, 1000);
@@ -160,20 +219,26 @@ function updateTimer() {
 
   if (timeLeft <= 0) {
     clearInterval(timer);
-    checkAnswer(null); // Automatically mark as incorrect
+    checkAnswer(null);
   }
 }
 
-function checkAnswer(selected) {
+function checkAnswer(selected, buttonClicked) {
   clearInterval(timer);
 
   const correct = questions[currentQuestion].answer;
   const resultDiv = document.getElementById('result');
 
+  const buttons = document.querySelectorAll('.options button');
+  buttons.forEach(button => button.disabled = true);
+
+  let answeredCorrectly = false;
+
   if (selected === correct) {
     score++;
     resultDiv.textContent = "¡Correcto!";
     resultDiv.style.color = "green";
+    answeredCorrectly = true;
   } else if (selected === null) {
     resultDiv.textContent = `¡Tiempo agotado! La respuesta era: ${correct}`;
     resultDiv.style.color = "red";
@@ -181,6 +246,13 @@ function checkAnswer(selected) {
     resultDiv.textContent = `Incorrecto. La respuesta era: ${correct}`;
     resultDiv.style.color = "red";
   }
+
+  answersSummary.push({
+    question: questions[currentQuestion].question,
+    yourAnswer: selected,
+    correctAnswer: correct,
+    correct: answeredCorrectly
+  });
 
   currentQuestion++;
 
@@ -191,7 +263,7 @@ function checkAnswer(selected) {
     nextButton.onclick = () => {
       resultDiv.textContent = '';
       showQuestion();
-      document.getElementById('next-container').innerHTML = ''; // Clear the "next" button
+      document.getElementById('next-container').innerHTML = '';
     };
     document.getElementById('next-container').appendChild(nextButton);
   } else {
@@ -202,15 +274,24 @@ function checkAnswer(selected) {
 }
 
 function finishTrivia() {
-  document.getElementById('question').textContent = `¡Trivia finalizada! 🎉 Puntaje: ${score}/${questions.length}`;
-  document.getElementById('options').innerHTML = '';
-  document.getElementById('result').textContent = '';
-  document.getElementById('timer').style.display = 'none'; // Ocultar el temporizador
-  
-  const restartDiv = document.getElementById('next-container');
-  restartDiv.innerHTML = '<button class="restart-btn" onclick="startTrivia()">Volver a jugar</button>';
+  const triviaScreen = document.getElementById('trivia-screen');
+  triviaScreen.innerHTML = `
+    <h1>¡Trivia finalizada! 🎉</h1>
+    <p>Tu puntaje: ${score} de ${questions.length}</p>
+    <div class="summary">
+      ${answersSummary.map((a, index) => `
+        <p>
+          <strong>Pregunta ${index + 1}:</strong> ${a.question}<br>
+          ${a.correct ? '✅' : '❌'} 
+          ${a.correct ? 'Correcto' : `Incorrecto. Tu respuesta: "${a.yourAnswer || 'No respondiste'}" | Correcta: "${a.correctAnswer}"`}
+        </p>
+      `).join('')}
+    </div>
+    <div class="thanks">¡Gracias por jugar!</div>
+  `;
 }
 </script>
 
 </body>
 </html>
+
